@@ -11,6 +11,7 @@ import {
   Animated,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { SFX } from '../utils/sounds';
 import { useGame } from '../hooks/useGame';
 import { useShake } from '../hooks/useShake';
 import { CountryInput } from '../components/CountryInput';
@@ -74,15 +75,18 @@ export function GameScreen() {
 
     if (isWinningGuess) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      SFX.win();
       showFeedback('You made it! 🎉', theme.colors.correct);
     } else if (isNeighbor) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      SFX.correct();
       showFeedback(
         `${country.name} borders ${COUNTRIES[lastInPath]?.name}! ✓`,
         theme.colors.correct
       );
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      SFX.wrong();
       shake();
       showFeedback(
         `${country.name} doesn't border ${COUNTRIES[lastInPath]?.name}`,
