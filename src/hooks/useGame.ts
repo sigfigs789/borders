@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createGame, makeGuess, GameState } from '../game/gameLogic';
 import { getDailyPuzzle, formatDate } from '../data/puzzles';
-import { loadSavedGame, saveGame, updateStatsOnComplete, GameStats } from '../utils/storage';
+import { loadSavedGame, saveGame, clearSavedGame, updateStatsOnComplete, GameStats } from '../utils/storage';
+import { getRandomPuzzle } from '../data/puzzles';
 import { COUNTRIES } from '../data/countries';
 
 interface UseGameReturn {
@@ -11,7 +12,7 @@ interface UseGameReturn {
   stats: GameStats | null;
   loading: boolean;
   submitGuess: (code: string) => void;
-  resetForTesting: () => void;
+  resetGame: (currentStart?: string, currentEnd?: string) => void;
 }
 
 export function useGame(): UseGameReturn {
@@ -74,18 +75,13 @@ export function useGame(): UseGameReturn {
     [gameState, puzzleNumber, statsUpdated]
   );
 
-  const resetForTesting = useCallback(() => {
-    const pairs = [
-      ['PRT', 'RUS'],
-      ['ESP', 'CHN'],
-      ['NOR', 'ZAF'],
-      ['USA', 'IRN'],
-    ];
-    const idx = Math.floor(Math.random() * pairs.length);
-    const [start, end] = pairs[idx];
-    setGameState(createGame(start, end));
+  const resetGame = useCallback(async (currentStart?: string, currentEnd?: string) => {
+    await clearSavedGame();
+    const exclude = currentStart && currentEnd ? `${currentStart}-${currentEnd}` : undefined;
+    const puzzle = getRandomPuzzle(exclude);
+    setGameState(createGame(puzzle.start, puzzle.end));
     setStatsUpdated(false);
   }, []);
 
-  return { gameState, puzzleNumber, dateString, stats, loading, submitGuess, resetForTesting };
+  return { gameState, puzzleNumber, dateString, stats, loading, submitGuess, resetGame };
 }

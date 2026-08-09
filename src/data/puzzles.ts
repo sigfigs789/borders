@@ -74,6 +74,18 @@ export function getPuzzleNumber(date: Date = new Date()): number {
   return Math.floor((date.getTime() - EPOCH) / dayMs) + 1;
 }
 
+export function getRandomPuzzle(exclude?: string): { start: string; end: string; number: number } {
+  const validPairs = PUZZLE_PAIRS.filter(([a, b]) => {
+    const key = `${a}-${b}`;
+    if (key === exclude) return false;
+    const path = findShortestPath(a, b);
+    return path !== null && path.length >= 3;
+  });
+  const idx = Math.floor(Math.random() * validPairs.length);
+  const [start, end] = validPairs[idx];
+  return { start, end, number: 0 };
+}
+
 export function getDailyPuzzle(date: Date = new Date()): { start: string; end: string; number: number } {
   const number = getPuzzleNumber(date);
   // Use puzzle number as seed to pick from pairs

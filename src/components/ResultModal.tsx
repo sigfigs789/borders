@@ -16,12 +16,13 @@ import { theme } from '../theme';
 interface Props {
   visible: boolean;
   onClose: () => void;
+  onReset: () => void;
   gameState: GameState;
   puzzleNumber: number;
   stats: GameStats | null;
 }
 
-export function ResultModal({ visible, onClose, gameState, puzzleNumber, stats }: Props) {
+export function ResultModal({ visible, onClose, onReset, gameState, puzzleNumber, stats }: Props) {
   const { isWon, guesses, optimalPath, startCode, endCode } = gameState;
 
   const correctGuesses = guesses.filter(g => g.isOnPath).length;
@@ -82,6 +83,16 @@ export function ResultModal({ visible, onClose, gameState, puzzleNumber, stats }
 
           <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
             <Text style={styles.shareBtnText}>Share Result</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.newPuzzleBtn}
+            onPress={() => {
+              onReset();
+              onClose();
+            }}
+          >
+            <Text style={styles.newPuzzleBtnText}>↺ New Random Puzzle</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
@@ -202,6 +213,19 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: theme.font.md,
     fontWeight: '700',
+  },
+  newPuzzleBtn: {
+    borderWidth: 1.5,
+    borderColor: theme.colors.primary,
+    borderRadius: theme.radius.full,
+    paddingVertical: theme.spacing.sm + 2,
+    width: '100%',
+    alignItems: 'center',
+  },
+  newPuzzleBtnText: {
+    color: theme.colors.primary,
+    fontSize: theme.font.md,
+    fontWeight: '600',
   },
   closeBtn: {
     paddingVertical: theme.spacing.xs,
