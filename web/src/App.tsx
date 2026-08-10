@@ -15,7 +15,7 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [feedback, setFeedback] = useState<{ text: string; color: string } | null>(null);
   const [shake, setShake] = useState(false);
-  const feedbackTimer = useRef<ReturnType<typeof setTimeout>>();
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (gameState?.isComplete) {
