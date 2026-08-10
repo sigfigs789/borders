@@ -66,8 +66,9 @@ export function GameMap({ gameState }: Props) {
         showsCompass={false}
         showsScale={false}
         showsUserLocation={false}
-        zoomEnabled={false}
-        scrollEnabled={false}
+        zoomEnabled
+        scrollEnabled
+        zoomControlEnabled
         rotateEnabled={false}
         pitchEnabled={false}
       >

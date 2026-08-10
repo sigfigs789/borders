@@ -8,7 +8,12 @@
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { height: 100%; background: #0f0f1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #ecf0f1; }
-      #root { height: 100%; display: flex; justify-content: center; }
+      #root { height: 100%; display: flex; justify-content: stretch; }
+
+      .leaflet-control-zoom { border: 1px solid #2a2a4a !important; box-shadow: 0 2px 8px rgba(0,0,0,.5) !important; }
+      .leaflet-control-zoom a { background: #1a1a2e !important; color: #ecf0f1 !important; border-color: #2a2a4a !important; }
+      .leaflet-control-zoom a:hover { background: #232345 !important; color: #4ecdc4 !important; }
+      .leaflet-control-zoom-in { border-bottom: 1px solid #2a2a4a !important; }
     </style>
   </head>
   <body>

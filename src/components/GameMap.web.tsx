@@ -1,10 +1,49 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, GeoJSON, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { GameState } from '../game/gameLogic';
 import { COUNTRIES } from '../data/countries';
 import { theme } from '../theme';
+
+// A single dissolved world-coastline polygon (no per-country subdivisions, so
+// there's nothing to draw a border along) and no text of any kind in the
+// source data, so labels can never appear no matter how it's rendered.
+const LAND_GEOJSON_URL =
+  'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector/geojson/ne_110m_land.geojson';
+let landDataPromise: Promise<any> | null = null;
+function getLandData() {
+  if (!landDataPromise) {
+    landDataPromise = fetch(LAND_GEOJSON_URL).then(r => r.json());
+  }
+  return landDataPromise;
+}
+
+function LandLayer() {
+  const [data, setData] = useState<any>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getLandData().then(d => {
+      if (!cancelled) setData(d);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  if (!data) return null;
+  return (
+    <GeoJSON
+      data={data}
+      style={{
+        fillColor: theme.colors.surfaceAlt,
+        fillOpacity: 1,
+        color: 'transparent',
+        weight: 0,
+      }}
+      interactive={false}
+    />
+  );
+}
 
 // Fix Leaflet's default icon paths (CDN CSS is injected in index.web.ts)
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -66,7 +105,7 @@ export function GameMap({ gameState }: Props) {
   return (
     <View style={styles.container}>
       <MapContainer
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', background: theme.colors.surface }}
         center={[20, 10]}
         zoom={2}
         zoomControl={false}
@@ -75,8 +114,11 @@ export function GameMap({ gameState }: Props) {
         dragging={false}
         doubleClickZoom={false}
       >
+        {/* Dark Gray Canvas "Base" layer only (no "Reference" overlay) — this base
+            tileset is land/water shading only, by design with no borders or labels;
+            those live in a separate overlay we're intentionally not adding. */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
           attribution=""
         />
 

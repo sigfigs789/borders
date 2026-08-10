@@ -70,9 +70,23 @@ export default function App() {
         ::-webkit-scrollbar { display: none; }
         * { box-sizing: border-box; }
         button:focus-visible { outline: 2px solid #4ecdc4; outline-offset: 2px; }
+
+        .app-shell { display: flex; flex-direction: column; min-height: 100vh; width: 100%; background: #0f0f1a; }
+        .top-section { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 16px 0; display: flex; flex-direction: column; gap: 14px; }
+        .content-row { display: flex; flex-direction: column; gap: 16px; padding: 16px; flex: 1; width: 100%; max-width: 760px; margin: 0 auto; }
+        .map-pane { height: 50vh; min-height: 320px; border-radius: 12px; overflow: hidden; border: 1px solid #2a2a4a; }
+        .sidebar-pane { display: flex; flex-direction: column; gap: 14px; }
+
+        @media (min-width: 900px) {
+          .app-shell { height: 100vh; overflow: hidden; }
+          .top-section { max-width: none; }
+          .content-row { flex-direction: row; overflow: hidden; min-height: 0; max-width: none; padding: 20px; gap: 20px; }
+          .map-pane { flex: 1; height: auto; min-height: 0; }
+          .sidebar-pane { width: 420px; flex-shrink: 0; overflow-y: auto; padding-right: 4px; }
+        }
       `}</style>
 
-      <div style={{ width: '100%', maxWidth: 540, display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0f0f1a' }}>
+      <div className="app-shell">
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #2a2a4a' }}>
@@ -84,9 +98,7 @@ export default function App() {
           <button onClick={() => setShowResult(true)} style={iconBtn}>📊</button>
         </div>
 
-        {/* Scrollable content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-
+        <div className="top-section">
           <p style={{ textAlign: 'center', fontSize: 12, color: '#7f8c8d', textTransform: 'uppercase', letterSpacing: 1 }}>{dateString}</p>
 
           {/* Puzzle card */}
@@ -99,45 +111,51 @@ export default function App() {
             </div>
             <p style={{ fontSize: 13, color: '#4a4a6a' }}>Optimal: {gameState.optimalPath.length - 2} steps</p>
           </div>
+        </div>
 
-          {/* Map */}
-          <GameMap gameState={gameState} />
-
-          {/* Path */}
-          <PathDisplay gameState={gameState} />
-
-          {/* Guess history */}
-          <GuessHistory guesses={gameState.guesses} maxGuesses={gameState.maxGuesses} />
-
-          {/* Feedback */}
-          <div style={{ minHeight: 28, textAlign: 'center' }}>
-            {feedback && (
-              <p style={{ color: feedback.color, fontSize: 15, fontWeight: 600, animation: 'popIn .15s ease' }}>
-                {feedback.text}
-              </p>
-            )}
+        {/* Map + sidebar */}
+        <div className="content-row">
+          <div className="map-pane">
+            <GameMap gameState={gameState} />
           </div>
 
-          {/* Input */}
-          {!gameState.isComplete ? (
-            <div style={{ animation: shake ? 'shake .4s ease' : undefined }}>
-              <p style={{ fontSize: 13, color: '#7f8c8d', marginBottom: 6 }}>
-                Guess a country bordering <span style={{ color: '#4ecdc4' }}>{nextCountry}</span>
-              </p>
-              <CountryInput onSelect={handleSelect} />
-            </div>
-          ) : (
-            <button onClick={() => setShowResult(true)} style={btnStyle('#4ecdc4', '#000')}>
-              {gameState.isWon ? '🎉 See Results' : '📊 See Results'}
-            </button>
-          )}
+          <div className="sidebar-pane">
+            {/* Path */}
+            <PathDisplay gameState={gameState} />
 
-          <button
-            onClick={() => newPuzzle(gameState.startCode, gameState.endCode)}
-            style={{ background: 'none', border: '1px solid #2a2a4a', color: '#7f8c8d', borderRadius: 8, padding: '10px', fontSize: 13, cursor: 'pointer', width: '100%' }}
-          >
-            ↺ New random puzzle
-          </button>
+            {/* Guess history */}
+            <GuessHistory guesses={gameState.guesses} maxGuesses={gameState.maxGuesses} />
+
+            {/* Feedback */}
+            <div style={{ minHeight: 28, textAlign: 'center' }}>
+              {feedback && (
+                <p style={{ color: feedback.color, fontSize: 15, fontWeight: 600, animation: 'popIn .15s ease' }}>
+                  {feedback.text}
+                </p>
+              )}
+            </div>
+
+            {/* Input */}
+            {!gameState.isComplete ? (
+              <div style={{ animation: shake ? 'shake .4s ease' : undefined }}>
+                <p style={{ fontSize: 13, color: '#7f8c8d', marginBottom: 6 }}>
+                  Guess a country bordering <span style={{ color: '#4ecdc4' }}>{nextCountry}</span>
+                </p>
+                <CountryInput onSelect={handleSelect} />
+              </div>
+            ) : (
+              <button onClick={() => setShowResult(true)} style={btnStyle('#4ecdc4', '#000')}>
+                {gameState.isWon ? '🎉 See Results' : '📊 See Results'}
+              </button>
+            )}
+
+            <button
+              onClick={() => newPuzzle(gameState.startCode, gameState.endCode)}
+              style={{ background: 'none', border: '1px solid #2a2a4a', color: '#7f8c8d', borderRadius: 8, padding: '10px', fontSize: 13, cursor: 'pointer', width: '100%' }}
+            >
+              ↺ New random puzzle
+            </button>
+          </div>
         </div>
       </div>
 

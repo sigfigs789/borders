@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, ZoomControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { GameState } from '@game/gameLogic';
 import { COUNTRIES } from '@data/countries';
@@ -33,18 +33,22 @@ export function GameMap({ gameState }: { gameState: GameState }) {
   const end = COUNTRIES[endCode];
 
   return (
-    <div style={{ height: 220, borderRadius: 12, overflow: 'hidden', border: '1px solid #2a2a4a' }}>
+    <div style={{ width: '100%', height: '100%' }}>
       <MapContainer
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', background: '#1a1a2e' }}
         center={[20, 15]}
         zoom={2}
         zoomControl={false}
         attributionControl={false}
-        scrollWheelZoom={false}
-        dragging={false}
-        doubleClickZoom={false}
+        scrollWheelZoom
+        dragging
+        doubleClickZoom
       >
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+        {/* Dark Gray Canvas "Base" layer only (no "Reference" overlay) — this base
+            tileset is land/water shading only, by design with no borders or labels;
+            those live in a separate overlay we're intentionally not adding. */}
+        <TileLayer url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}" />
+        <ZoomControl position="bottomright" />
         <FitBounds codes={visibleCodes} />
 
         {pathCoords.length > 1 && (

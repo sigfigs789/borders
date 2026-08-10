@@ -45,10 +45,11 @@ export function findShortestPath(from: string, to: string): string[] | null {
 
 export function createGame(startCode: string, endCode: string): GameState {
   const optimalPath = findShortestPath(startCode, endCode) ?? [startCode, endCode];
-  // optimal includes start and end; intermediate steps = optimalPath.length - 2
-  // player gets optimal intermediate guesses + 5 bonus
-  const numIntermediates = Math.max(0, optimalPath.length - 2);
-  const maxGuesses = numIntermediates + 5;
+  // optimal includes start and end; the number of guesses needed to win
+  // optimally is one per step from start to end (optimalPath.length - 1).
+  // Player gets 75% more guesses than that, rounded up.
+  const optimalGuesses = Math.max(1, optimalPath.length - 1);
+  const maxGuesses = Math.ceil(optimalGuesses * 1.75);
 
   return {
     startCode,

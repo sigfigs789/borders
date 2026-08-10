@@ -65,10 +65,10 @@ describe('createGame', () => {
     expect(state.currentPath).toEqual(['FRA']);
   });
 
-  it('calculates maxGuesses as optimal intermediates + 5', () => {
-    // France → Germany is 1 hop (0 intermediates), so maxGuesses = 0 + 5 = 5
+  it('calculates maxGuesses as 75% more than optimal, rounded up', () => {
+    // France → Germany is 1 hop (1 optimal guess), so maxGuesses = ceil(1 * 1.75) = 2
     const state = createGame('FRA', 'DEU');
-    expect(state.maxGuesses).toBe(5);
+    expect(state.maxGuesses).toBe(2);
   });
 
   it('starts with no guesses and not complete', () => {
