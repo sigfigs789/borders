@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { MapContainer, GeoJSON, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { GameState } from '../game/gameLogic';
-import { COUNTRIES } from '../data/countries';
+import { COUNTRIES, pickIcon } from '../data/countries';
 import { theme } from '../theme';
 
 // A single dissolved world-coastline polygon (no per-country subdivisions, so
@@ -62,22 +62,37 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-function makeIcon(color: string) {
+const DOT_SIZE = 20;
+const EMOJI_SIZE = 26;
+const ICON_GAP = 3;
+const ICON_HEIGHT = EMOJI_SIZE + ICON_GAP + DOT_SIZE;
+// Where the dot's center sits as a fraction of the icon's height, so a
+// bounce-in scale animation grows outward from that point (the true
+// coordinate anchor) rather than the div's top-left corner.
+const DOT_CENTER_FRACTION = ((ICON_HEIGHT - DOT_SIZE / 2) / ICON_HEIGHT) * 100;
+
+function makeIcon(color: string, emoji: string, bounce?: boolean) {
   return L.divIcon({
     className: '',
-    html: `<div style="
-      width:14px;height:14px;border-radius:50%;
-      background:${color};border:2px solid #fff;
-      box-shadow:0 1px 4px rgba(0,0,0,0.5);
-    "></div>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+    html: `<div class="${bounce ? 'marker-bounce-in' : ''}" style="
+      display:flex;flex-direction:column;align-items:center;
+      width:${EMOJI_SIZE}px;
+      transform-origin:center ${DOT_CENTER_FRACTION}%;
+    ">
+      <div style="font-size:22px;line-height:${EMOJI_SIZE}px;">${emoji}</div>
+      <div style="
+        width:${DOT_SIZE}px;height:${DOT_SIZE}px;border-radius:50%;
+        background:${color};border:2px solid #fff;
+        box-shadow:0 1px 4px rgba(0,0,0,0.5);
+        margin-top:${ICON_GAP}px;
+      "></div>
+    </div>`,
+    // Anchor at the dot's center (not the emoji), so the marker still points
+    // at the country's true coordinate while the emoji floats above it.
+    iconSize: [EMOJI_SIZE, ICON_HEIGHT],
+    iconAnchor: [EMOJI_SIZE / 2, ICON_HEIGHT - DOT_SIZE / 2],
   });
 }
-
-const startIcon = makeIcon(theme.colors.start);
-const correctIcon = makeIcon(theme.colors.correct);
-const endIcon = makeIcon(theme.colors.end);
 
 function FitBounds({ codes }: { codes: string[] }) {
   const map = useMap();
@@ -103,6 +118,23 @@ interface Props {
 export function GameMap({ gameState }: Props) {
   const { startCode, endCode, currentPath } = gameState;
   const visibleCodes = Array.from(new Set([...currentPath, endCode]));
+
+  // Track whichever country was just correctly placed, so its marker can
+  // bounce in. Cleared shortly after so re-renders (e.g. from panning) don't
+  // replay the animation.
+  const prevPathLenRef = useRef(currentPath.length);
+  const [bounceCode, setBounceCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (currentPath.length > prevPathLenRef.current) {
+      const newCode = currentPath[currentPath.length - 1];
+      setBounceCode(newCode);
+      const t = setTimeout(() => setBounceCode(null), 500);
+      prevPathLenRef.current = currentPath.length;
+      return () => clearTimeout(t);
+    }
+    prevPathLenRef.current = currentPath.length;
+  }, [currentPath.length]);
 
   const pathCoords = currentPath
     .map(c => COUNTRIES[c])
@@ -147,7 +179,7 @@ export function GameMap({ gameState }: Props) {
         {COUNTRIES[startCode] && (
           <Marker
             position={[COUNTRIES[startCode].lat, COUNTRIES[startCode].lng]}
-            icon={startIcon}
+            icon={makeIcon(theme.colors.start, pickIcon(startCode))}
           />
         )}
 
@@ -157,14 +189,17 @@ export function GameMap({ gameState }: Props) {
             <Marker
               key={code}
               position={[COUNTRIES[code].lat, COUNTRIES[code].lng]}
-              icon={correctIcon}
+              icon={makeIcon(theme.colors.correct, pickIcon(code), code === bounceCode)}
             />
           ) : null
         )}
 
         {/* End marker */}
         {endCountry && (
-          <Marker position={[endCountry.lat, endCountry.lng]} icon={endIcon} />
+          <Marker
+            position={[endCountry.lat, endCountry.lng]}
+            icon={makeIcon(theme.colors.end, pickIcon(endCode), endCode === bounceCode)}
+          />
         )}
       </MapContainer>
     </View>

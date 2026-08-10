@@ -10,6 +10,14 @@ if (typeof document !== 'undefined') {
   style.textContent = `
     html, body, #root { height: 100%; margin: 0; background: #0f0f1a; }
     #root > div { max-width: 480px; margin: 0 auto; min-height: 100%; box-shadow: 0 0 60px rgba(0,0,0,0.5); }
+
+    @keyframes markerBounceIn {
+      0% { transform: scale(0); }
+      60% { transform: scale(1.25); }
+      80% { transform: scale(0.92); }
+      100% { transform: scale(1); }
+    }
+    .marker-bounce-in { animation: markerBounceIn 0.5s cubic-bezier(.34,1.56,.64,1); transform-origin: center bottom; }
   `;
   document.head.appendChild(style);
 }
