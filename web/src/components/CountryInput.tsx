@@ -52,9 +52,11 @@ export function CountryInput({ onSelect, disabled }: { onSelect: (c: Country) =>
 
       {suggestions.length > 0 && (
         <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+          // Opens upward: the input sits near the bottom of the screen on
+          // mobile, so a downward dropdown would get clipped by the layout.
+          position: 'absolute', bottom: '100%', left: 0, right: 0, zIndex: 100,
           background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: 10,
-          marginTop: 4, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,.4)',
+          marginBottom: 4, maxHeight: '40vh', overflowY: 'auto', boxShadow: '0 -8px 24px rgba(0,0,0,.4)',
         }}>
           {suggestions.map((c, i) => (
             <button key={c.code} onClick={() => handleSelect(c)}
