@@ -15,7 +15,7 @@ export function useGame() {
     setPuzzleNumber(puzzle.number);
     setDateString(formatDate(today));
 
-    const saved = localStorage.getItem(`borders:game:${puzzle.number}`);
+    const saved = localStorage.getItem(`map-trail:game:${puzzle.number}`);
     if (saved) {
       const guesses: string[] = JSON.parse(saved);
       let state = createGame(puzzle.start, puzzle.end);
@@ -31,7 +31,7 @@ export function useGame() {
       if (!prev || prev.isComplete) return prev;
       const next = makeGuess(prev, code);
       localStorage.setItem(
-        `borders:game:${puzzleNumber}`,
+        `map-trail:game:${puzzleNumber}`,
         JSON.stringify(next.guesses.map(g => g.code))
       );
       return next;

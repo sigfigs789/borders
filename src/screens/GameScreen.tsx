@@ -119,7 +119,7 @@ export function GameScreen() {
           <Text style={styles.iconBtnText}>?</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.appName}>BORDERS</Text>
+          <Text style={styles.appName}>MAP TRAIL</Text>
           <Text style={styles.puzzleNum}>#{puzzleNumber}</Text>
         </View>
         <TouchableOpacity onPress={() => setShowResult(true)} style={styles.iconBtn}>

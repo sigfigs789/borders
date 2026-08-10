@@ -130,5 +130,5 @@ export function buildShareText(state: GameState, puzzleNumber: number): string {
 
   const rows = state.guesses.map(g => (g.isOnPath ? '🟩' : '🟥')).join('');
 
-  return `Borders #${puzzleNumber} ${emoji}\n${correct}/${total} (optimal: ${optimal})\n${rows}\nborders.app`;
+  return `Map Trail #${puzzleNumber} ${emoji}\n${correct}/${total} (optimal: ${optimal})\n${rows}\nmaptrail.app`;
 }

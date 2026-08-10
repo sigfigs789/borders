@@ -92,7 +92,7 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #2a2a4a' }}>
           <button onClick={() => setShowHelp(true)} style={iconBtn}>?</button>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: 4, color: '#ecf0f1' }}>BORDERS</div>
+            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: 4, color: '#ecf0f1' }}>MAP TRAIL</div>
             <div style={{ fontSize: 11, color: '#7f8c8d', letterSpacing: 1 }}>#{puzzleNumber}</div>
           </div>
           <button onClick={() => setShowResult(true)} style={iconBtn}>📊</button>

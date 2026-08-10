@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { MapContainer, GeoJSON, Marker, Polyline, ZoomControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { GameState } from '@game/gameLogic';
-import { COUNTRIES } from '@data/countries';
+import { COUNTRIES, pickIcon } from '@data/countries';
 
 const COLORS = { start: '#3498db', correct: '#27ae60', end: '#9b59b6' };
 
@@ -49,12 +49,29 @@ function LandLayer() {
   );
 }
 
-function icon(color: string) {
+const DOT_SIZE = 18;
+const EMOJI_SIZE = 26;
+const ICON_GAP = 3;
+const ICON_HEIGHT = EMOJI_SIZE + ICON_GAP + DOT_SIZE;
+
+function icon(color: string, emoji: string) {
   return L.divIcon({
     className: '',
-    html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6)"></div>`,
-    iconSize: [12, 12],
-    iconAnchor: [6, 6],
+    html: `<div style="
+      display:flex;flex-direction:column;align-items:center;
+      width:${EMOJI_SIZE}px;
+    ">
+      <div style="font-size:22px;line-height:${EMOJI_SIZE}px;">${emoji}</div>
+      <div style="
+        width:${DOT_SIZE}px;height:${DOT_SIZE}px;border-radius:50%;background:${color};
+        border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6);
+        margin-top:${ICON_GAP}px;
+      "></div>
+    </div>`,
+    // Anchor at the dot's center (not the emoji), so the marker still points
+    // at the country's true coordinate while the emoji floats above it.
+    iconSize: [EMOJI_SIZE, ICON_HEIGHT],
+    iconAnchor: [EMOJI_SIZE / 2, ICON_HEIGHT - DOT_SIZE / 2],
   });
 }
 
@@ -102,12 +119,23 @@ export function GameMap({ gameState }: { gameState: GameState }) {
         )}
 
         {COUNTRIES[startCode] && (
-          <Marker position={[COUNTRIES[startCode].lat, COUNTRIES[startCode].lng]} icon={icon(COLORS.start)} />
+          <Marker
+            position={[COUNTRIES[startCode].lat, COUNTRIES[startCode].lng]}
+            icon={icon(COLORS.start, pickIcon(startCode))}
+          />
         )}
         {currentPath.slice(1).filter(c => c !== endCode).map(code =>
-          COUNTRIES[code] ? <Marker key={code} position={[COUNTRIES[code].lat, COUNTRIES[code].lng]} icon={icon(COLORS.correct)} /> : null
+          COUNTRIES[code] ? (
+            <Marker
+              key={code}
+              position={[COUNTRIES[code].lat, COUNTRIES[code].lng]}
+              icon={icon(COLORS.correct, pickIcon(code))}
+            />
+          ) : null
         )}
-        {end && <Marker position={[end.lat, end.lng]} icon={icon(COLORS.end)} />}
+        {end && (
+          <Marker position={[end.lat, end.lng]} icon={icon(COLORS.end, pickIcon(endCode))} />
+        )}
       </MapContainer>
     </div>
   );

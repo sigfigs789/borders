@@ -18,8 +18,8 @@ export interface SavedGameState {
 }
 
 const KEYS = {
-  stats: 'borders:stats',
-  savedGame: 'borders:saved_game',
+  stats: 'map-trail:stats',
+  savedGame: 'map-trail:saved_game',
 };
 
 const defaultStats: GameStats = {

@@ -5,7 +5,86 @@ export interface Country {
   // rough center coords for map display
   lat: number;
   lng: number;
+  // one or more emoji that evoke the country (landmark/food/animal/etc.),
+  // falling back to the flag when we don't have anything more specific
+  icons: string[];
 }
+
+// alpha-3 -> alpha-2, used to derive a flag emoji fallback for every country
+const ISO2: Record<string, string> = {
+  AFG: 'AF', ALB: 'AL', DZA: 'DZ', AND: 'AD', AGO: 'AO', ARG: 'AR', ARM: 'AM', AUT: 'AT',
+  AZE: 'AZ', BGD: 'BD', BLR: 'BY', BEL: 'BE', BLZ: 'BZ', BEN: 'BJ', BTN: 'BT', BOL: 'BO',
+  BIH: 'BA', BWA: 'BW', BRA: 'BR', BRN: 'BN', BGR: 'BG', BFA: 'BF', BDI: 'BI', KHM: 'KH',
+  CMR: 'CM', CAN: 'CA', CAF: 'CF', TCD: 'TD', CHL: 'CL', CHN: 'CN', COL: 'CO', COD: 'CD',
+  COG: 'CG', CRI: 'CR', HRV: 'HR', CZE: 'CZ', DNK: 'DK', DJI: 'DJ', DOM: 'DO', ECU: 'EC',
+  EGY: 'EG', SLV: 'SV', GNQ: 'GQ', ERI: 'ER', EST: 'EE', SWZ: 'SZ', ETH: 'ET', FIN: 'FI',
+  FRA: 'FR', GAB: 'GA', GMB: 'GM', GEO: 'GE', DEU: 'DE', GHA: 'GH', GRC: 'GR', GTM: 'GT',
+  GIN: 'GN', GNB: 'GW', GUY: 'GY', GUF: 'GF', HTI: 'HT', HND: 'HN', HUN: 'HU', IND: 'IN',
+  IDN: 'ID', IRN: 'IR', IRQ: 'IQ', IRL: 'IE', ISR: 'IL', ITA: 'IT', JOR: 'JO', KAZ: 'KZ',
+  KEN: 'KE', PRK: 'KP', KOR: 'KR', XKX: 'XK', KWT: 'KW', KGZ: 'KG', LAO: 'LA', LVA: 'LV',
+  LBN: 'LB', LSO: 'LS', LBR: 'LR', LBY: 'LY', LIE: 'LI', LTU: 'LT', LUX: 'LU', MWI: 'MW',
+  MYS: 'MY', MLI: 'ML', MRT: 'MR', MEX: 'MX', MDA: 'MD', MCO: 'MC', MNG: 'MN', MNE: 'ME',
+  MAR: 'MA', MOZ: 'MZ', MMR: 'MM', NAM: 'NA', NPL: 'NP', NLD: 'NL', NIC: 'NI', NER: 'NE',
+  NGA: 'NG', MKD: 'MK', NOR: 'NO', OMN: 'OM', PAK: 'PK', PSE: 'PS', PAN: 'PA', PNG: 'PG',
+  PRY: 'PY', PER: 'PE', POL: 'PL', PRT: 'PT', QAT: 'QA', ROU: 'RO', RUS: 'RU', RWA: 'RW',
+  SMR: 'SM', SAU: 'SA', SEN: 'SN', SRB: 'RS', SLE: 'SL', SGP: 'SG', SVK: 'SK', SVN: 'SI',
+  SOM: 'SO', ZAF: 'ZA', SSD: 'SS', ESP: 'ES', SDN: 'SD', SUR: 'SR', SWE: 'SE', CHE: 'CH',
+  SYR: 'SY', TWN: 'TW', TJK: 'TJ', TZA: 'TZ', THA: 'TH', TLS: 'TL', TGO: 'TG', TUN: 'TN',
+  TUR: 'TR', TKM: 'TM', UGA: 'UG', UKR: 'UA', ARE: 'AE', GBR: 'GB', GIB: 'GI', USA: 'US',
+  URY: 'UY', UZB: 'UZ', VAT: 'VA', VEN: 'VE', VNM: 'VN', ESH: 'EH', YEM: 'YE', ZMB: 'ZM',
+  ZWE: 'ZW', CIV: 'CI',
+};
+
+function flagEmoji(alpha3: string): string {
+  const iso2 = ISO2[alpha3];
+  if (!iso2) return '🏳️';
+  return String.fromCodePoint(...[...iso2].map(c => 0x1f1e6 + c.charCodeAt(0) - 65));
+}
+
+// Hand-picked emoji that evoke each country — a landmark, food, animal, or
+// other cultural touchstone. Countries not listed here fall back to their flag.
+const ICONS: Record<string, string[]> = {
+  AFG: ['🏔️'], ALB: ['🦅'], DZA: ['🐫'], AND: ['⛷️'], AGO: ['💎'],
+  ARG: ['🥩', '💃', '⚽'], ARM: ['🍑', '⛪'], AUT: ['🎻', '🏔️'], AZE: ['🔥'],
+  BGD: ['🐅', '🌾'], BLR: ['🥔'], BEL: ['🍫', '🧇', '🍺'], BLZ: ['🐠'],
+  BEN: ['🥁'], BTN: ['🐉', '🏔️'], BOL: ['🦙', '🏔️'], BIH: ['🌉'],
+  BWA: ['🐘'], BRA: ['⚽', '💃', '🦜'], BRN: ['🕌'], BGR: ['🌹'],
+  BFA: ['🌍'], BDI: ['🥁'], KHM: ['🛕'], CMR: ['🦁'],
+  CAN: ['🍁', '🦫'], CAF: ['🌴'], TCD: ['🐪'], CHL: ['🗿', '🍷'],
+  CHN: ['🐼', '🐉', '🥢'], COL: ['☕'], COD: ['🦍'], COG: ['🌴'],
+  CRI: ['🦥', '🌴'], HRV: ['👔', '⚽'], CZE: ['🍺', '🏰'], DNK: ['🧜‍♀️', '🧱'],
+  DJI: ['🐫'], DOM: ['⚾', '🏖️'], ECU: ['🐢'], EGY: ['🐫', '🌅'],
+  SLV: ['🌋'], GNQ: ['🌴'], ERI: ['🐪'], EST: ['🎶', '🌲'],
+  SWZ: ['🦁'], ETH: ['☕'], FIN: ['🧖', '🎅'], FRA: ['🗼', '🥖', '🧀'],
+  GAB: ['🦍'], GMB: ['🥁'], GEO: ['🍷'], DEU: ['🍺', '🥨', '🚗'],
+  GHA: ['🍫'], GRC: ['🏛️', '🫒'], GTM: ['🦜'], GIN: ['🌴'],
+  GNB: ['🌴'], GUY: ['🌳'], GUF: ['🚀'], HTI: ['🥁'],
+  HND: ['🌴'], HUN: ['🌶️'], IND: ['🐘', '🍛', '🕉️'], IDN: ['🌋', '🦎'],
+  IRN: ['🐆', '🏺'], IRQ: ['🕌'], IRL: ['🍀', '🍺'], ISR: ['✡️'],
+  ITA: ['🍕', '🍝', '🏛️'], JOR: ['🏜️', '🐪'], KAZ: ['🐎'], KEN: ['🦁', '🏃'],
+  KOR: ['🎤', '🍲'], KWT: ['🛢️'], KGZ: ['🐎', '🏔️'], LAO: ['🛕'],
+  LVA: ['🌲'], LBN: ['🌲'], LSO: ['🏔️'], LBR: ['🌴'],
+  LBY: ['🐪'], LIE: ['🏔️'], LTU: ['🌲'], LUX: ['🏰'],
+  MWI: ['🐟'], MYS: ['🐯', '🏙️'], MLI: ['🕌'], MRT: ['🐪'],
+  MEX: ['🌮', '🌵'], MDA: ['🍷'], MCO: ['🎰', '🏎️'], MNG: ['🐎', '⛺'],
+  MNE: ['🏔️'], MAR: ['🕌', '🐪'], MOZ: ['🌴'], MMR: ['🛕'],
+  NAM: ['🏜️'], NPL: ['🏔️'], NLD: ['🌷', '🧀', '🚲'], NIC: ['🌋'],
+  NER: ['🐪'], NGA: ['🎬', '🛢️'], MKD: ['🏔️'], NOR: ['🐟', '🏔️'],
+  OMN: ['🐪'], PAK: ['🏔️'], PSE: ['🕌'], PAN: ['🚢'],
+  PNG: ['🦜'], PRY: ['🌳'], PER: ['🦙', '🌽'], POL: ['🥟'],
+  PRT: ['🐓', '🍷'], QAT: ['🛢️'], ROU: ['🧛', '🏰'], RUS: ['🪆', '🐻'],
+  RWA: ['🦍'], SMR: ['🏰'], SAU: ['🕋', '🐪'], SEN: ['🦁'],
+  SRB: ['🎾'], SLE: ['💎'], SGP: ['🦁', '🏙️'], SVK: ['🏔️'],
+  SVN: ['🏔️'], SOM: ['🐫'], ZAF: ['🦁', '🍷'], SSD: ['🐪'],
+  ESP: ['💃', '🐂', '🥘'], SDN: ['🐪'], SUR: ['🌳'], SWE: ['🪑', '❄️'],
+  CHE: ['🍫', '🧀', '⛰️'], SYR: ['🕌'], TWN: ['🧋', '🏙️'], TJK: ['🏔️'],
+  TZA: ['🦁', '🏔️'], THA: ['🐘', '🛕'], TLS: ['🌴'], TGO: ['🌴'],
+  TUN: ['🕌'], TUR: ['🕌', '🫖'], TKM: ['🐪'], UGA: ['🦍'],
+  UKR: ['🌻'], ARE: ['🏙️', '🐪'], GBR: ['☂️', '🫖', '👑'], GIB: ['🐒'],
+  USA: ['🗽', '🍔', '🦅'], URY: ['🧉'], UZB: ['🐪'], VAT: ['⛪'],
+  VEN: ['🛢️'], VNM: ['🍜', '🌾'], ESH: ['🐪'], YEM: ['☕'],
+  ZMB: ['🦓'], ZWE: ['🐘'], CIV: ['🍫'],
+};
 
 // ISO 3166-1 alpha-3 codes + XKX (Kosovo), TWN (Taiwan), PSE (Palestine), ESH (Western Sahara), GUF (French Guiana)
 const RAW: Array<[string, string, number, number, string[]]> = [
@@ -178,7 +257,8 @@ export const COUNTRIES: Record<string, Country> = {};
 export const COUNTRY_LIST: Country[] = [];
 
 for (const [code, name, lat, lng, neighbors] of RAW) {
-  const country: Country = { code, name, lat, lng, neighbors };
+  const icons = ICONS[code] ?? [flagEmoji(code)];
+  const country: Country = { code, name, lat, lng, neighbors, icons };
   COUNTRIES[code] = country;
   COUNTRY_LIST.push(country);
 }
@@ -194,4 +274,16 @@ export function searchCountries(query: string): Country[] {
 
 export function areNeighbors(a: string, b: string): boolean {
   return COUNTRIES[a]?.neighbors.includes(b) ?? false;
+}
+
+// Deterministically pick a single emoji from a country's icon pool — same
+// country always resolves to the same icon (stable across re-renders and if
+// the same country appears more than once), just picked via a simple hash
+// rather than always taking the first one in the list.
+export function pickIcon(code: string): string {
+  const icons = COUNTRIES[code]?.icons;
+  if (!icons || icons.length === 0) return '';
+  let hash = 0;
+  for (let i = 0; i < code.length; i++) hash = (hash * 31 + code.charCodeAt(i)) >>> 0;
+  return icons[hash % icons.length];
 }
