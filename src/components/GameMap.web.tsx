@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { MapContainer, GeoJSON, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { GameState } from '../game/gameLogic';
-import { COUNTRIES, pickIcon } from '../data/countries';
+import { COUNTRIES } from '../data/countries';
 import { theme } from '../theme';
 
 // A single dissolved world-coastline polygon (no per-country subdivisions, so
@@ -63,34 +63,17 @@ L.Icon.Default.mergeOptions({
 });
 
 const DOT_SIZE = 20;
-const EMOJI_SIZE = 26;
-const ICON_GAP = 3;
-const ICON_HEIGHT = EMOJI_SIZE + ICON_GAP + DOT_SIZE;
-// Where the dot's center sits as a fraction of the icon's height, so a
-// bounce-in scale animation grows outward from that point (the true
-// coordinate anchor) rather than the div's top-left corner.
-const DOT_CENTER_FRACTION = ((ICON_HEIGHT - DOT_SIZE / 2) / ICON_HEIGHT) * 100;
 
-function makeIcon(color: string, emoji: string, bounce?: boolean) {
+function makeIcon(color: string, bounce?: boolean) {
   return L.divIcon({
     className: '',
     html: `<div class="${bounce ? 'marker-bounce-in' : ''}" style="
-      display:flex;flex-direction:column;align-items:center;
-      width:${EMOJI_SIZE}px;
-      transform-origin:center ${DOT_CENTER_FRACTION}%;
-    ">
-      <div style="font-size:22px;line-height:${EMOJI_SIZE}px;">${emoji}</div>
-      <div style="
-        width:${DOT_SIZE}px;height:${DOT_SIZE}px;border-radius:50%;
-        background:${color};border:2px solid #fff;
-        box-shadow:0 1px 4px rgba(0,0,0,0.5);
-        margin-top:${ICON_GAP}px;
-      "></div>
-    </div>`,
-    // Anchor at the dot's center (not the emoji), so the marker still points
-    // at the country's true coordinate while the emoji floats above it.
-    iconSize: [EMOJI_SIZE, ICON_HEIGHT],
-    iconAnchor: [EMOJI_SIZE / 2, ICON_HEIGHT - DOT_SIZE / 2],
+      width:${DOT_SIZE}px;height:${DOT_SIZE}px;border-radius:50%;
+      background:${color};border:2px solid #fff;
+      box-shadow:0 1px 4px rgba(0,0,0,0.5);
+    "></div>`,
+    iconSize: [DOT_SIZE, DOT_SIZE],
+    iconAnchor: [DOT_SIZE / 2, DOT_SIZE / 2],
   });
 }
 
@@ -179,7 +162,7 @@ export function GameMap({ gameState }: Props) {
         {COUNTRIES[startCode] && (
           <Marker
             position={[COUNTRIES[startCode].lat, COUNTRIES[startCode].lng]}
-            icon={makeIcon(theme.colors.start, pickIcon(startCode))}
+            icon={makeIcon(theme.colors.start)}
           />
         )}
 
@@ -189,7 +172,7 @@ export function GameMap({ gameState }: Props) {
             <Marker
               key={code}
               position={[COUNTRIES[code].lat, COUNTRIES[code].lng]}
-              icon={makeIcon(theme.colors.correct, pickIcon(code), code === bounceCode)}
+              icon={makeIcon(theme.colors.correct, code === bounceCode)}
             />
           ) : null
         )}
@@ -198,7 +181,7 @@ export function GameMap({ gameState }: Props) {
         {endCountry && (
           <Marker
             position={[endCountry.lat, endCountry.lng]}
-            icon={makeIcon(theme.colors.end, pickIcon(endCode), endCode === bounceCode)}
+            icon={makeIcon(theme.colors.end, endCode === bounceCode)}
           />
         )}
       </MapContainer>

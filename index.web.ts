@@ -17,7 +17,7 @@ if (typeof document !== 'undefined') {
       80% { transform: scale(0.92); }
       100% { transform: scale(1); }
     }
-    .marker-bounce-in { animation: markerBounceIn 0.5s cubic-bezier(.34,1.56,.64,1); transform-origin: center bottom; }
+    .marker-bounce-in { animation: markerBounceIn 0.5s cubic-bezier(.34,1.56,.64,1); transform-origin: center; }
   `;
   document.head.appendChild(style);
 }

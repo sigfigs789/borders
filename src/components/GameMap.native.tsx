@@ -1,23 +1,20 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Animated, StyleSheet, View, Text } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from 'react-native-maps';
 import { GameState } from '../game/gameLogic';
-import { COUNTRIES, pickIcon } from '../data/countries';
+import { COUNTRIES } from '../data/countries';
 import { theme } from '../theme';
 
 const DOT_SIZE = 20;
-const EMOJI_SIZE = 26;
-const ICON_GAP = 3;
-const ICON_HEIGHT = EMOJI_SIZE + ICON_GAP + DOT_SIZE;
-// Fraction of the marker's height where the dot's center sits, so the marker
-// still points at the country's true coordinate while the emoji floats above.
-const MARKER_ANCHOR_Y = (ICON_HEIGHT - DOT_SIZE / 2) / ICON_HEIGHT;
+// Fraction of the marker's height where the dot's center sits (it's the
+// whole marker here, but kept as a fraction for a stable, centered anchor).
+const MARKER_ANCHOR_Y = 0.5;
 
 // How long the bounce-in animation runs — the marker's `tracksViewChanges`
 // window on the map should stay open at least this long, then close for perf.
 const BOUNCE_MS = 500;
 
-function MarkerDot({ color, code, bounce }: { color: string; code: string; bounce?: boolean }) {
+function MarkerDot({ color, bounce }: { color: string; bounce?: boolean }) {
   const scale = useRef(new Animated.Value(bounce ? 0 : 1)).current;
 
   useEffect(() => {
@@ -32,23 +29,17 @@ function MarkerDot({ color, code, bounce }: { color: string; code: string; bounc
   }, [bounce]);
 
   return (
-    <Animated.View style={[markerStyles.container, { transform: [{ scale }] }]}>
-      <Text style={markerStyles.emoji}>{pickIcon(code)}</Text>
-      <View style={[markerStyles.dot, { backgroundColor: color }]} />
-    </Animated.View>
+    <Animated.View style={[markerStyles.dot, { backgroundColor: color, transform: [{ scale }] }]} />
   );
 }
 
 const markerStyles = StyleSheet.create({
-  container: { alignItems: 'center' },
-  emoji: { fontSize: 22, lineHeight: EMOJI_SIZE },
   dot: {
     width: DOT_SIZE,
     height: DOT_SIZE,
     borderRadius: DOT_SIZE / 2,
     borderWidth: 2,
     borderColor: '#fff',
-    marginTop: ICON_GAP,
   },
 });
 
@@ -167,7 +158,7 @@ export function GameMap({ gameState }: Props) {
             title={COUNTRIES[startCode].name}
             anchor={{ x: 0.5, y: MARKER_ANCHOR_Y }}
           >
-            <MarkerDot color={theme.colors.start} code={startCode} />
+            <MarkerDot color={theme.colors.start} />
           </Marker>
         )}
 
@@ -181,7 +172,7 @@ export function GameMap({ gameState }: Props) {
               anchor={{ x: 0.5, y: MARKER_ANCHOR_Y }}
               tracksViewChanges={code === bounceCode}
             >
-              <MarkerDot color={theme.colors.correct} code={code} bounce={code === bounceCode} />
+              <MarkerDot color={theme.colors.correct} bounce={code === bounceCode} />
             </Marker>
           ) : null
         ))}
@@ -194,7 +185,7 @@ export function GameMap({ gameState }: Props) {
             anchor={{ x: 0.5, y: MARKER_ANCHOR_Y }}
             tracksViewChanges={endCode === bounceCode}
           >
-            <MarkerDot color={theme.colors.end} code={endCode} bounce={endCode === bounceCode} />
+            <MarkerDot color={theme.colors.end} bounce={endCode === bounceCode} />
           </Marker>
         )}
       </MapView>
