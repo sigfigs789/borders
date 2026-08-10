@@ -1,10 +1,53 @@
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, ZoomControl, useMap } from 'react-leaflet';
+import { useEffect, useState } from 'react';
+import { MapContainer, GeoJSON, Marker, Polyline, ZoomControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { GameState } from '@game/gameLogic';
 import { COUNTRIES } from '@data/countries';
 
 const COLORS = { start: '#3498db', correct: '#27ae60', end: '#9b59b6' };
+
+// A single dissolved world-coastline polygon (no per-country subdivisions, so
+// there's nothing to draw a border along) and no text of any kind in the
+// source data, so labels can never appear no matter how it's rendered.
+const LAND_GEOJSON_URL =
+  'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector/geojson/ne_110m_land.geojson';
+let landDataPromise: Promise<any> | null = null;
+function getLandData() {
+  if (!landDataPromise) {
+    landDataPromise = fetch(LAND_GEOJSON_URL).then(r => r.json());
+  }
+  return landDataPromise;
+}
+
+function LandLayer() {
+  const map = useMap();
+  const [data, setData] = useState<any>(null);
+  useEffect(() => {
+    // Dedicated pane below Leaflet's default overlayPane (z-index 400), so the
+    // land shape always sits behind markers/polylines no matter which loads
+    // first — GeoJSON fetches asynchronously and can otherwise mount after them.
+    if (!map.getPane('land')) {
+      const pane = map.createPane('land');
+      pane.style.zIndex = '350';
+    }
+    let cancelled = false;
+    getLandData().then(d => {
+      if (!cancelled) setData(d);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [map]);
+  if (!data) return null;
+  return (
+    <GeoJSON
+      data={data}
+      pane="land"
+      style={{ fillColor: '#16213e', fillOpacity: 1, color: 'transparent', weight: 0 }}
+      interactive={false}
+    />
+  );
+}
 
 function icon(color: string) {
   return L.divIcon({
@@ -44,10 +87,7 @@ export function GameMap({ gameState }: { gameState: GameState }) {
         dragging
         doubleClickZoom
       >
-        {/* Dark Gray Canvas "Base" layer only (no "Reference" overlay) — this base
-            tileset is land/water shading only, by design with no borders or labels;
-            those live in a separate overlay we're intentionally not adding. */}
-        <TileLayer url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}" />
+        <LandLayer />
         <ZoomControl position="bottomright" />
         <FitBounds codes={visibleCodes} />
 

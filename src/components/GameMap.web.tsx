@@ -20,8 +20,16 @@ function getLandData() {
 }
 
 function LandLayer() {
+  const map = useMap();
   const [data, setData] = useState<any>(null);
   useEffect(() => {
+    // Dedicated pane below Leaflet's default overlayPane (z-index 400), so the
+    // land shape always sits behind markers/polylines no matter which loads
+    // first — GeoJSON fetches asynchronously and can otherwise mount after them.
+    if (!map.getPane('land')) {
+      const pane = map.createPane('land');
+      pane.style.zIndex = '350';
+    }
     let cancelled = false;
     getLandData().then(d => {
       if (!cancelled) setData(d);
@@ -29,11 +37,12 @@ function LandLayer() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [map]);
   if (!data) return null;
   return (
     <GeoJSON
       data={data}
+      pane="land"
       style={{
         fillColor: theme.colors.surfaceAlt,
         fillOpacity: 1,
@@ -114,13 +123,7 @@ export function GameMap({ gameState }: Props) {
         dragging={false}
         doubleClickZoom={false}
       >
-        {/* Dark Gray Canvas "Base" layer only (no "Reference" overlay) — this base
-            tileset is land/water shading only, by design with no borders or labels;
-            those live in a separate overlay we're intentionally not adding. */}
-        <TileLayer
-          url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-          attribution=""
-        />
+        <LandLayer />
 
         <FitBounds codes={visibleCodes} />
 
