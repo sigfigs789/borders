@@ -34,6 +34,16 @@ export function CountryInput({ onSelect, disabled, placeholder = 'Search for a c
     Keyboard.dismiss();
   }
 
+  function handleKeyPress(e: any) {
+    // On web: Enter selects the first suggestion, Escape clears
+    if (e.key === 'Enter' && suggestions.length > 0) {
+      handleSelect(suggestions[0]);
+    } else if (e.key === 'Escape') {
+      setQuery('');
+      setSuggestions([]);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.inputRow}>
@@ -48,6 +58,7 @@ export function CountryInput({ onSelect, disabled, placeholder = 'Search for a c
           autoCorrect={false}
           autoCapitalize="words"
           returnKeyType="search"
+          onKeyPress={handleKeyPress}
         />
         {query.length > 0 && (
           <TouchableOpacity
