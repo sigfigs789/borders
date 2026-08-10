@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
   Modal,
   TouchableOpacity,
   StyleSheet,
-  Share,
-  Alert,
+  Switch,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { captureRef } from 'react-native-view-shot';
 import { GameState, buildShareText, getScoreEmoji } from '../game/gameLogic';
 import { COUNTRIES } from '../data/countries';
 import { GameStats } from '../utils/storage';
@@ -29,60 +30,103 @@ export function ResultModal({ visible, onClose, onReset, gameState, puzzleNumber
   const totalGuesses = guesses.length;
   const optimal = optimalPath.length - 2;
   const emoji = getScoreEmoji(gameState);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [spoilerFree, setSpoilerFree] = useState(false);
+  const shareCardRef = useRef<View>(null);
 
   async function handleShare() {
-    const text = buildShareText(gameState, puzzleNumber);
     try {
-      await Share.share({ message: text });
-    } catch {}
+      // Render the result card to a PNG and put the image itself on the
+      // clipboard — no OS share sheet, just a direct copy the user can
+      // paste anywhere. Falls back to copying the text summary if image
+      // capture/clipboard isn't available on this device.
+      const base64 = await captureRef(shareCardRef, { format: 'png', quality: 1, result: 'base64' });
+      await Clipboard.setImageAsync(base64);
+      setCopyState('copied');
+    } catch {
+      try {
+        await Clipboard.setStringAsync(buildShareText(gameState, puzzleNumber, spoilerFree));
+        setCopyState('copied');
+      } catch {
+        setCopyState('failed');
+      }
+    }
+    setTimeout(() => setCopyState('idle'), 1600);
   }
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
-          <Text style={styles.emoji}>{isWon ? emoji : '❌'}</Text>
-          <Text style={styles.title}>{isWon ? 'Nice route!' : 'Better luck tomorrow'}</Text>
+          {/* Everything inside this view is what gets captured as the shared image */}
+          <View ref={shareCardRef} collapsable={false} style={styles.shareCard}>
+            <Text style={styles.appName}>MAP TRAIL #{puzzleNumber}</Text>
+            <Text style={styles.emoji}>{isWon ? emoji : '❌'}</Text>
+            <Text style={styles.title}>{isWon ? 'Nice route!' : 'Better luck tomorrow'}</Text>
 
-          <View style={styles.routeRow}>
-            <Text style={styles.routeFlag}>
-              {COUNTRIES[startCode]?.name ?? startCode}
-            </Text>
-            <Text style={styles.routeArrow}> → </Text>
-            <Text style={styles.routeFlag}>
-              {COUNTRIES[endCode]?.name ?? endCode}
-            </Text>
-          </View>
-
-          <View style={styles.statsRow}>
-            <StatBox label="Guesses" value={`${totalGuesses}`} />
-            <StatBox label="Correct" value={`${correctGuesses}`} accent={theme.colors.correct} />
-            <StatBox label="Optimal" value={`${optimal}`} accent={theme.colors.primary} />
-          </View>
-
-          {stats && (
-            <View style={styles.globalStats}>
-              <Text style={styles.globalTitle}>Your Stats</Text>
-              <View style={styles.statsRow}>
-                <StatBox label="Played" value={`${stats.played}`} />
-                <StatBox label="Win %" value={stats.played > 0 ? `${Math.round((stats.won / stats.played) * 100)}` : '0'} />
-                <StatBox label="Streak" value={`${stats.currentStreak}`} />
-                <StatBox label="Best" value={`${stats.maxStreak}`} />
-              </View>
+            <View style={styles.routeRow}>
+              <Text style={styles.routeFlag}>
+                {COUNTRIES[startCode]?.name ?? startCode}
+              </Text>
+              <Text style={styles.routeArrow}> → </Text>
+              <Text style={styles.routeFlag}>
+                {COUNTRIES[endCode]?.name ?? endCode}
+              </Text>
             </View>
-          )}
 
-          <View style={styles.tileRow}>
-            {guesses.map((g, i) => (
-              <View
-                key={i}
-                style={[styles.resultTile, g.isOnPath ? styles.tileGreen : styles.tileRed]}
-              />
-            ))}
+            <View style={styles.statsRow}>
+              <StatBox label="Guesses" value={`${totalGuesses}`} />
+              <StatBox label="Correct" value={`${correctGuesses}`} accent={theme.colors.correct} />
+              <StatBox label="Optimal" value={`${optimal}`} accent={theme.colors.primary} />
+            </View>
+
+            {stats && (
+              <View style={styles.globalStats}>
+                <Text style={styles.globalTitle}>Your Stats</Text>
+                <View style={styles.statsRow}>
+                  <StatBox label="Played" value={`${stats.played}`} />
+                  <StatBox label="Win %" value={stats.played > 0 ? `${Math.round((stats.won / stats.played) * 100)}` : '0'} />
+                  <StatBox label="Streak" value={`${stats.currentStreak}`} />
+                  <StatBox label="Best" value={`${stats.maxStreak}`} />
+                </View>
+              </View>
+            )}
+
+            {spoilerFree ? (
+              <View style={styles.tileRow}>
+                {guesses.map((g, i) => (
+                  <View
+                    key={i}
+                    style={[styles.resultTile, g.isOnPath ? styles.tileGreen : styles.tileRed]}
+                  />
+                ))}
+              </View>
+            ) : (
+              <View style={styles.guessList}>
+                {guesses.map((g, i) => (
+                  <View key={i} style={styles.guessListRow}>
+                    <View style={[styles.resultTile, g.isOnPath ? styles.tileGreen : styles.tileRed]} />
+                    <Text style={styles.guessListName}>{g.name}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
+          <View style={styles.spoilerRow}>
+            <Text style={styles.spoilerLabel}>Spoiler Free</Text>
+            <Switch
+              value={spoilerFree}
+              onValueChange={setSpoilerFree}
+              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              thumbColor="#fff"
+            />
           </View>
 
           <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-            <Text style={styles.shareBtnText}>Share Result</Text>
+            <Text style={styles.shareBtnText}>
+              {copyState === 'copied' ? 'Copied!' : copyState === 'failed' ? "Couldn't copy" : 'Copy Result Image'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -129,6 +173,19 @@ const styles = StyleSheet.create({
     maxWidth: 380,
     alignItems: 'center',
     gap: theme.spacing.md,
+  },
+  shareCard: {
+    width: '100%',
+    backgroundColor: theme.colors.surfaceAlt,
+    borderRadius: theme.radius.lg,
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  appName: {
+    color: theme.colors.textMuted,
+    fontSize: theme.font.sm,
+    fontWeight: '700',
+    letterSpacing: 2,
   },
   emoji: {
     fontSize: 48,
@@ -200,6 +257,30 @@ const styles = StyleSheet.create({
   },
   tileRed: {
     backgroundColor: theme.colors.wrong,
+  },
+  guessList: {
+    width: '100%',
+    gap: 6,
+  },
+  guessListRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  guessListName: {
+    color: theme.colors.text,
+    fontSize: theme.font.sm,
+    fontWeight: '600',
+  },
+  spoilerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  spoilerLabel: {
+    color: theme.colors.textMuted,
+    fontSize: theme.font.sm,
   },
   shareBtn: {
     backgroundColor: theme.colors.primary,

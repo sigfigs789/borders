@@ -193,4 +193,19 @@ describe('buildShareText', () => {
     const text = buildShareText(state, 1);
     expect(text).toContain('🟥');
   });
+
+  it('includes guessed country names by default (spoiler free off)', () => {
+    let state = createGame('FRA', 'DEU');
+    state = makeGuess(state, 'DEU');
+    const text = buildShareText(state, 1);
+    expect(text).toContain('Germany');
+  });
+
+  it('omits country names but keeps squares when spoiler free is on', () => {
+    let state = createGame('FRA', 'DEU');
+    state = makeGuess(state, 'DEU');
+    const text = buildShareText(state, 1, true);
+    expect(text).not.toContain('Germany');
+    expect(text).toContain('🟩');
+  });
 });

@@ -122,13 +122,21 @@ export function getScoreEmoji(state: GameState): string {
   return '✅';
 }
 
-export function buildShareText(state: GameState, puzzleNumber: number): string {
+// `spoilerFree` hides the guessed country names, leaving just the colored
+// squares (which only signal right/wrong, not what was guessed). Defaults to
+// false — shows the words — matching the toggle's unclicked default state.
+export function buildShareText(state: GameState, puzzleNumber: number, spoilerFree = false): string {
   const emoji = getScoreEmoji(state);
   const correct = state.guesses.filter(g => g.isOnPath).length;
   const total = state.guesses.length;
   const optimal = state.optimalPath.length - 2;
 
-  const rows = state.guesses.map(g => (g.isOnPath ? '🟩' : '🟥')).join('');
+  const rows = state.guesses
+    .map(g => {
+      const square = g.isOnPath ? '🟩' : '🟥';
+      return spoilerFree ? square : `${square} ${g.name}`;
+    })
+    .join(spoilerFree ? '' : '\n');
 
   return `Map Trail #${puzzleNumber} ${emoji}\n${correct}/${total} (optimal: ${optimal})\n${rows}\nmaptrail.app`;
 }
