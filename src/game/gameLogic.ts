@@ -113,7 +113,8 @@ export function getGuessesRemaining(state: GameState): number {
 
 export function getScoreEmoji(state: GameState): string {
   if (!state.isWon) return '❌';
-  const used = state.guesses.filter(g => g.isOnPath).length;
+  // Don't count the final destination guess — only intermediate steps matter
+  const used = state.guesses.filter(g => g.isOnPath && g.code !== state.endCode).length;
   const optimal = state.optimalPath.length - 2;
   if (used === optimal) return '✨';
   if (used <= optimal + 1) return '⭐';
